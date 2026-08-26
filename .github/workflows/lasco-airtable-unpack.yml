@@ -1,0 +1,30 @@
+name: LASCO Airtable image staging
+
+on:
+  push:
+    paths:
+      - 'lasco-airtable-staging/archive.b64'
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode LASCO product images
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf lasco-airtable-staging/images
+          mkdir -p lasco-airtable-staging/images
+          base64 -d lasco-airtable-staging/archive.b64 > /tmp/lasco-images.tar.gz
+          tar -xzf /tmp/lasco-images.tar.gz -C lasco-airtable-staging/images
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lasco-airtable-staging/images
+          if ! git diff --cached --quiet; then
+            git commit -m 'Unpack LASCO Airtable staging images'
+            git push
+          fi
