@@ -9,23 +9,61 @@ permissions:
   contents: write
 
 jobs:
-  unpack:
+  stage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Decode LASCO product images
+      - name: Fetch legacy LASCO product images
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf lasco-airtable-staging/images
           mkdir -p lasco-airtable-staging/images
-          cat lasco-airtable-staging/archive.part-* > /tmp/lasco-images.b64
-          base64 -d /tmp/lasco-images.b64 > /tmp/lasco-images.tar.gz
-          tar -xzf /tmp/lasco-images.tar.gz -C lasco-airtable-staging/images
+          fetch() {
+            slug="$1"; year="$2"; month="$3"; file="$4"; ext="${file##*.}"
+            out="lasco-airtable-staging/images/${slug}.${ext}"
+            url="https://www.lascopaints.co.za/wp-content/uploads/${year}/${month}/${file}"
+            echo "Fetching $slug"
+            curl -fL --retry 3 --connect-timeout 20 -A 'Mozilla/5.0' "$url" -o "$out" || \
+            curl -fL --retry 3 --connect-timeout 20 -A 'Mozilla/5.0' "https://lascopaints.co.za/wp-content/uploads/${year}/${month}/${file}" -o "$out"
+          }
+          fetch 2k-autocryl-paint 2020 10 2K_Autocryl-removebg-preview.png
+          fetch 2k-thinners 2024 04 Lasco-2k-Thinners.jpg
+          fetch aerosol-paints 2020 10 Lasco-Aerosol-Paint.jpg
+          fetch auto-paper-waterproof 2024 04 Auto-Paper-Waterproof.jpg
+          fetch base-coat-paint 2024 04 Lasco-Base-Coat-Paint.jpg
+          fetch benzine 2024 04 Lasco-Benzine.jpg
+          fetch body-filler-light-weight 2024 04 Body-Filler-Light-Weight-Lasco.jpg
+          fetch buff-tape 2024 04 Lasco-Buff-Tape.jpg
+          fetch carbon-brushes 2024 04 Lasco-Carbon-Brush-Set.jpg
+          fetch coloured-meths 2024 04 Lasco-Coloured-Meths.jpg
+          fetch cutting-disk 2024 04 Cutting-disk.jpg
+          fetch double-sided-tape 2024 04 Double-sided-Tape.jpg
+          fetch fibreglass-chopped-strand-matting 2024 04 Lasco-Fibreglass-Chopped-Strand-Matting.jpg
+          fetch lacquer-thinners 2024 04 Lasco-Lacquer-Thinners.jpg
+          fetch metal-polish-miroxol 2024 04 Metal-Polish-Miroxol.jpg
+          fetch nc-autoline-paint 2024 04 N.C-Autoline-Lasco.jpg
+          fetch paint-brushes 2024 04 Paint-Brushes.jpg
+          fetch paraffin 2024 04 Paraffin-Lasco.jpg
+          fetch paste-hardener 2024 04 Paste-Hardner-1.jpg
+          fetch polishing-cream 2024 04 Polishing-Cream-Lasco.jpg
+          fetch polyester-putty 2024 04 Fibreglass-Polyester-Putty.jpg
+          fetch premium-quality-masking-tape 2024 04 Masking-Tape.jpg
+          fetch production-paper 2020 10 Production-paper.jpg
+          fetch qd-enamel-paint 2024 04 QD-Enamel-Lasco.jpg
+          fetch resin 2024 04 Resin-General-Purpose.jpg
+          fetch rubber-sanding-block 2024 04 Rubber-Sanding-Block-Lasco.jpg
+          fetch rubbing-compound 2024 04 Rubbing-Compound-Lasco.jpg
+          fetch speed-files-wooden 2024 04 Speed-File-Wooden.jpg
+          fetch spot-putty 2024 04 Spot-Putty-Lasco.jpg
+          fetch stone-chip-sealer 2024 04 Stone-Chip-Primer-Lasco.jpg
+          fetch stopper-fine-polyester-putty 2024 04 Fine-Polyester-Putty-Stopper-Lasco.jpg
+          fetch turpentine 2024 04 Turpentine-Lasco.jpg
+          fetch welding-rods 2020 10 Welding-Rods.jpg
+          fetch wood-finish-paint 2020 10 premium-wood-paint.jpg
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lasco-airtable-staging/images
           if ! git diff --cached --quiet; then
-            git commit -m 'Unpack LASCO Airtable staging images'
+            git commit -m 'Stage LASCO legacy product images'
             git push
           fi
